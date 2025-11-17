@@ -1,4 +1,4 @@
-FROM node:22.0.0-alpine as frontend_builder
+FROM node:25-alpine as frontend_builder
 
 WORKDIR /app
 
@@ -12,17 +12,25 @@ FROM amazoncorretto:21-alpine as backend_builder
 
 WORKDIR /app
 
-COPY --link gradle ./gradle
-COPY --link build.gradle gradlew gradlew.bat settings.gradle ./
-COPY --link backend ./backend
+COPY ./backend/gradle ./backend/gradle
+COPY ./backend/gradlew ./backend/gradlew
+COPY ./backend/gradlew.bat ./backend/gradlew.bat
+COPY ./backend/settings.gradle.kts ./backend/settings.gradle.kts
+COPY ./backend/build.gradle.kts ./backend/build.gradle.kts
 
-RUN ./gradlew clean build
+WORKDIR /app/backend
+RUN ./gradlew build -x test --no-daemon || return 0
+
+COPY ./backend/src ./src
+
+RUN ./gradlew clean build --no-daemon -PskipIntegrationTests=true
 
 FROM amazoncorretto:21-alpine
 
 WORKDIR /app
+
 COPY --from=frontend_builder /app/.output/public /app/public
-COPY --from=backend_builder /app/backend/application/build/libs/application-1.16.0.jar chatvault.jar
+COPY --from=backend_builder /app/backend/build/libs/*.jar chatvault.jar
 
 VOLUME /config
 EXPOSE 8080
