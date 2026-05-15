@@ -3,7 +3,7 @@
 
     <main class="container-fluid">
       <div class="d-flex justify-content-center" v-if="store.loading">
-        <strong>Loading...</strong>
+        <strong>{{ t('loading') }}</strong>
         <div class="spinner-border ml-auto" role="status" aria-hidden="true"></div>
       </div>
       <div class="row h-100 m-3 m-md-4">
@@ -46,8 +46,10 @@ import ChatList from "~/components/ChatList.vue";
 import MessageArea from "~/components/MessageArea.vue";
 import ChatConfig from "~/components/ChatConfig.vue";
 import {useMainStore} from "~/store";
+import { useUiText } from "~/composables/useUiText";
 
 const store = useMainStore()
+const { t } = useUiText()
 const listChatsAPIUrl = useRuntimeConfig().public.api.listChats
 const getAppVersionAPIUrl = useRuntimeConfig().public.api.appVersion
 const {data: chats, refresh} = await useFetch(listChatsAPIUrl)
@@ -113,7 +115,7 @@ onMounted(() => {
 <style>
 .index-page {
   font-size: 18px;
-  color: #ffff;
+  color: var(--color-text);
 
 }
 
@@ -124,7 +126,7 @@ main {
 
 .app-version {
   font-size: 14px;
-  color: #aaa;
+  color: var(--color-text-subtle);
   margin-top: 24px;
   margin-bottom: 0;
   margin-right: 8px;
