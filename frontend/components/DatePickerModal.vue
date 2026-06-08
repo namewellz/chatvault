@@ -7,10 +7,10 @@
     >
       <div class="modal-dialog">
         <div class="modal-content">
-          <div class="modal-header d-flex justify-content-between align-items-center">
+          <div class="modal-header" style="display:flex;justify-content:space-between;align-items:center;">
             <div>
               <h5 class="modal-title">{{ t('jumpToDateTitle') }}</h5>
-              <p class="modal-subtitle mb-0">{{ t('jumpToDateSubtitle') }}</p>
+              <p class="modal-subtitle" style="margin-bottom:0;">{{ t('jumpToDateSubtitle') }}</p>
             </div>
             <button
               type="button"
@@ -22,15 +22,13 @@
 
           <div class="modal-body">
             <!-- Loading state -->
-            <div v-if="statisticsLoading" class="text-center py-5">
-              <div class="spinner-border text-primary" role="status">
-                <span class="visually-hidden">{{ t('loading') }}</span>
-              </div>
-              <div class="text-muted mt-2 small">{{ t('preparingTimeline') }}</div>
+            <div v-if="statisticsLoading" style="text-align:center;padding:2rem 0;">
+              <div class="wa-spinner" role="status" style="display:inline-block;margin-bottom:0.5rem;"></div>
+              <div style="color:#6b7280;font-size:0.85rem;">{{ t('preparingTimeline') }}</div>
             </div>
 
             <!-- Error state -->
-            <div v-else-if="!messageStatistics" class="alert alert-warning mb-0">
+            <div v-else-if="!messageStatistics" style="background:#fef3cd;border:1px solid #ffc107;border-radius:8px;padding:0.75rem 1rem;margin-bottom:0;color:#664d03;">
               {{ t('calendarLoadError') }}
             </div>
 

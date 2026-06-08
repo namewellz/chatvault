@@ -2,36 +2,34 @@
 
 const host = process.env.API_HOST || '/api'
 export default defineNuxtConfig({
-  devtools: {enabled: true},
+  devtools: { enabled: true },
   ssr: false,
 
   runtimeConfig: {
-      public: {
-          api: {
-              appVersion: `${host}/version`,
-              listChats: `${host}/chats`,
-              getMessagesByIdAndPage: `${host}/chats/:chatId?page=:page&size=:size&query=:query`,
-              getMessagesByDate: `${host}/chats/:chatId/messages-around-date?date=:date&pageSize=:pageSize`,
-              getMessageStatistics: `${host}/chats/:chatId/message-statistics?year=:year&month=:month`,
-              getAttachmentByChatIdAndMessageId: `${host}/chats/:chatId/messages/:messageId/attachment`,
-              getAttachmentsInfoByChatId: `${host}/chats/:chatId/attachments`,
-              importChatById: `${host}/chats/:chatId/messages/import`,
-              updateChatNameByChatId: `${host}/chats/:chatId/chatName/:chatName`,
-              getProfileImage: `${host}/chats/:chatId/profile-image`,
-              exportChatById: `${host}/chats/:chatId/export`,
-              deleteChatById: `${host}/chats/:chatId`,
-              importChatByName: `${host}/chats/import/:chatName`,
-              importFromDisk: `${host}/chats/disk-import`,
-              exportAllChats: `${host}/chats/export/all`
-          }
-      }
+    public: {
+      api: {
+        appVersion: `${host}/version`,
+        listChats: `${host}/chats`,
+        getMessagesByIdAndPage: `${host}/chats/:chatId?page=:page&size=:size&query=:query`,
+        getMessagesByDate: `${host}/chats/:chatId/messages-around-date?date=:date&pageSize=:pageSize`,
+        getMessageStatistics: `${host}/chats/:chatId/message-statistics?year=:year&month=:month`,
+        getAttachmentByChatIdAndMessageId: `${host}/chats/:chatId/messages/:messageId/attachment`,
+        getAttachmentsInfoByChatId: `${host}/chats/:chatId/attachments`,
+        importChatById: `${host}/chats/:chatId/messages/import`,
+        updateChatNameByChatId: `${host}/chats/:chatId/chatName/:chatName`,
+        getProfileImage: `${host}/chats/:chatId/profile-image`,
+        exportChatById: `${host}/chats/:chatId/export`,
+        deleteChatById: `${host}/chats/:chatId`,
+        importChatByName: `${host}/chats/import/:chatName`,
+        importFromDisk: `${host}/chats/disk-import`,
+        exportAllChats: `${host}/chats/export/all`,
+      },
+    },
   },
 
-  css: ["bootstrap/dist/css/bootstrap.min.css"],
+  css: ['~/assets/css/main.css'],
 
-  modules: [
-      '@pinia/nuxt',
-  ],
+  modules: ['@pinia/nuxt', '@nuxtjs/tailwindcss'],
 
   compatibilityDate: '2025-01-12',
 })

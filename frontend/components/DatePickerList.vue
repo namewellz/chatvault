@@ -1,63 +1,44 @@
 <template>
   <div class="date-picker-list">
     <!-- Header with month/year and navigation -->
-    <div class="list-header d-flex justify-content-between align-items-center mb-3">
-      <button
-        class="btn btn-sm btn-outline-secondary nav-btn"
-        @click="previousMonth"
-        :disabled="isLoading"
-        :aria-label="t('previousMonth')"
-      >
-        ‹
-      </button>
-      <h5 class="month-label mb-0">{{ monthYearLabel }}</h5>
-      <button
-        class="btn btn-sm btn-outline-secondary nav-btn"
-        @click="nextMonth"
-        :disabled="isLoading"
-        :aria-label="t('nextMonth')"
-      >
-        ›
-      </button>
+    <div class="list-header" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.75rem;">
+      <button class="nav-btn" @click="previousMonth" :disabled="isLoading" :aria-label="t('previousMonth')">‹</button>
+      <h5 class="month-label" style="margin:0">{{ monthYearLabel }}</h5>
+      <button class="nav-btn" @click="nextMonth" :disabled="isLoading" :aria-label="t('nextMonth')">›</button>
     </div>
 
     <!-- Date list -->
     <div class="dates-list">
-      <div v-if="datesWithMessages.length === 0" class="empty-state mb-0">
+      <div v-if="datesWithMessages.length === 0" class="empty-state">
         <div class="empty-title">{{ t('noMessagesMonth') }}</div>
-        <small class="text-muted">{{ t('noMessagesHint') }}</small>
+        <small style="color:#6b7280;">{{ t('noMessagesHint') }}</small>
       </div>
       <button
         v-for="item in datesWithMessages"
         :key="item.dateStr"
-        class="list-item btn btn-outline-primary d-flex justify-content-between align-items-center"
+        class="list-item"
+        style="display:flex;justify-content:space-between;align-items:center;"
         @click="selectDate(item.day)"
         :disabled="isLoading"
       >
         <span>
           <strong>{{ item.formattedDate }}</strong>
-          <small class="text-muted d-block">{{ item.dayOfWeek }}</small>
+          <small style="color:#6b7280;display:block;">{{ item.dayOfWeek }}</small>
         </span>
-        <span class="badge bg-primary">{{ item.messageCount }}</span>
+        <span class="badge" style="background:#0d6efd;color:#fff;border-radius:999px;padding:0.25rem 0.5rem;font-size:0.8rem;">
+          {{ item.messageCount }}
+        </span>
       </button>
     </div>
 
     <!-- Today button -->
-    <div class="mt-3 text-center">
-      <button
-        class="btn btn-sm btn-primary today-btn"
-        @click="goToToday"
-        :disabled="isLoading"
-      >
-        {{ t('today') }}
-      </button>
+    <div style="margin-top:0.75rem;text-align:center;">
+      <button class="today-btn" @click="goToToday" :disabled="isLoading">{{ t('today') }}</button>
     </div>
 
     <!-- Loading state -->
-    <div v-if="isLoading" class="mt-3 text-center">
-      <div class="spinner-border spinner-border-sm text-primary" role="status">
-        <span class="visually-hidden">{{ t('loading') }}</span>
-      </div>
+    <div v-if="isLoading" style="margin-top:0.75rem;text-align:center;">
+      <div class="wa-spinner" style="display:inline-block;"></div>
     </div>
   </div>
 </template>

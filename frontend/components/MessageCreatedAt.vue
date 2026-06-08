@@ -1,7 +1,7 @@
 <template>
-  <div class="flex-grow-1 text-end">
-    <div class="small" :class="{ 'font-weight-bold': isToday }">{{ formattedDate }}</div>
-  </div>
+  <span :class="isToday ? 'font-semibold text-wa-green' : 'text-wa-text-muted'" class="text-[12px] whitespace-nowrap">
+    {{ formattedDate }}
+  </span>
 </template>
 
 <script setup lang="ts">
@@ -9,7 +9,6 @@ import { useDateFormatting } from '~/composables/useDateFormatting'
 import { isToday as isTodayUtil, formatDate as utilFormatDate } from '~/utils/dateFormatter'
 
 const props = defineProps(['date'])
-
 const { locale } = useDateFormatting()
 
 const formattedDate = computed(() => {
@@ -19,12 +18,6 @@ const formattedDate = computed(() => {
 
 const isToday = computed(() => {
   if (!props.date) return false
-  const date = new Date(props.date)
-  return isTodayUtil(date)
+  return isTodayUtil(new Date(props.date))
 })
-
 </script>
-
-<style scoped>
-
-</style>

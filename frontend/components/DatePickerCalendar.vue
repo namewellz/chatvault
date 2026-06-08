@@ -1,18 +1,18 @@
 <template>
   <div class="calendar-picker">
     <!-- Header with month/year and navigation -->
-    <div class="calendar-header d-flex justify-content-between align-items-center mb-3">
+    <div class="calendar-header" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.75rem;">
       <button
-        class="btn btn-sm btn-outline-secondary nav-btn"
+        class="nav-btn"
         @click="previousMonth"
         :disabled="isLoading"
         :aria-label="t('previousMonth')"
       >
         ‹
       </button>
-      <h5 class="month-label mb-0">{{ monthYearLabel }}</h5>
+      <h5 class="month-label" style="margin:0">{{ monthYearLabel }}</h5>
       <button
-        class="btn btn-sm btn-outline-secondary nav-btn"
+        class="nav-btn"
         @click="nextMonth"
         :disabled="isLoading"
         :aria-label="t('nextMonth')"
@@ -22,18 +22,19 @@
     </div>
 
     <!-- Day of week labels -->
-    <div class="calendar-weekdays d-grid mb-2" style="grid-template-columns: repeat(7, 1fr); gap: 0.25rem;">
+    <div class="calendar-weekdays" style="display:grid;grid-template-columns:repeat(7,1fr);gap:0.25rem;margin-bottom:0.5rem;">
       <div
         v-for="(dayLabel, index) in dayLabels"
         :key="`day-${index}`"
-        class="weekday text-center small text-muted"
+        class="weekday"
+        style="text-align:center;font-size:0.7rem;color:#6b7280;text-transform:uppercase;"
       >
         {{ dayLabel }}
       </div>
     </div>
 
     <!-- Calendar grid -->
-    <div class="calendar-grid d-grid" style="grid-template-columns: repeat(7, 1fr); gap: 0.25rem;">
+    <div class="calendar-grid" style="display:grid;grid-template-columns:repeat(7,1fr);gap:0.25rem;">
       <button
         v-for="(day, index) in calendarDays"
         :key="`day-cell-${index}`"
@@ -50,28 +51,22 @@
         @click="selectDate(day)"
       >
         <span v-if="day !== null" class="day-number">{{ day }}</span>
-        <small v-if="day !== null && hasMessages(day)" class="message-count d-block">
+        <small v-if="day !== null && hasMessages(day)" class="message-count" style="display:block;">
           {{ getMessageCount(day) }}
         </small>
       </button>
     </div>
 
     <!-- Today button -->
-    <div class="mt-3 text-center">
-      <button
-        class="btn btn-sm btn-primary today-btn"
-        @click="goToToday"
-        :disabled="isLoading"
-      >
+    <div style="margin-top:0.75rem;text-align:center;">
+      <button class="today-btn" @click="goToToday" :disabled="isLoading">
         {{ t('today') }}
       </button>
     </div>
 
     <!-- Loading state -->
-    <div v-if="isLoading" class="mt-3 text-center">
-      <div class="spinner-border spinner-border-sm text-primary" role="status">
-        <span class="visually-hidden">{{ t('loading') }}</span>
-      </div>
+    <div v-if="isLoading" style="margin-top:0.75rem;text-align:center;">
+      <div class="wa-spinner" role="status" style="display:inline-block;"></div>
     </div>
   </div>
 </template>

@@ -1,218 +1,128 @@
 <script setup lang="ts">
-import {useMainStore} from "~/store";
-import { useUiText } from "~/composables/useUiText";
+import { useMainStore } from '~/store'
+import { useUiText } from '~/composables/useUiText'
 
-const store = useMainStore();
-const { t } = useUiText();
-
-const showMedia = ref(false);
-const imageImportRef = ref<HTMLInputElement | null>(null);
-const imageUrl = ref<string | ArrayBuffer | null>(null);
-const fileValid = ref(false);
+const store = useMainStore()
+const { t } = useUiText()
+const showModal = ref(false)
+const imageImportRef = ref<HTMLInputElement | null>(null)
+const imageUrl = ref<string | ArrayBuffer | null>(null)
+const fileValid = ref(false)
 
 const profileImagePath = computed(() =>
-    useRuntimeConfig().public.api.getProfileImage.replace(':chatId', store.chatActive.chatId.toString())
-);
-
-const modalClass = computed(() => ({
-  'fade show d-block': showMedia.value
-}));
+  useRuntimeConfig().public.api.getProfileImage.replace(':chatId', store.chatActive.chatId.toString())
+)
 
 function resetFileInput() {
-  if (imageImportRef.value) {
-    imageImportRef.value.value = ''; // Limpa o input de arquivo
-    fileValid.value = false;
-    imageUrl.value = null;
-  }
+  if (imageImportRef.value) imageImportRef.value.value = ''
+  fileValid.value = false
+  imageUrl.value = null
 }
 
 function toggleModal() {
-  showMedia.value = !showMedia.value;
-  if (!showMedia.value) {
-    resetFileInput();
-  }
+  showModal.value = !showModal.value
+  if (!showModal.value) resetFileInput()
 }
 
 function previewFile(file: File) {
-  const reader = new FileReader();
-  reader.onload = () => {
-    imageUrl.value = reader.result;
-  };
-  reader.readAsDataURL(file);
+  const reader = new FileReader()
+  reader.onload = () => { imageUrl.value = reader.result }
+  reader.readAsDataURL(file)
 }
 
 function onFilePicked(event: Event) {
-  const file = (event.target as HTMLInputElement)?.files?.[0];
-  if (file) {
-    fileValid.value = true;
-    previewFile(file);
-  }
+  const file = (event.target as HTMLInputElement)?.files?.[0]
+  if (file) { fileValid.value = true; previewFile(file) }
 }
 
 async function uploadFile() {
-  if (!imageImportRef.value?.files?.[0]) return;
-
-  const file = imageImportRef.value.files[0];
-  const formData = new FormData();
-  formData.append("profile-image", file);
-
+  if (!imageImportRef.value?.files?.[0]) return
+  const formData = new FormData()
+  formData.append('profile-image', imageImportRef.value.files[0])
   try {
-    await $fetch(profileImagePath.value, {
-      method: "POST",
-      body: formData,
-    });
-    store.reloadImageProfile = true;
-    toggleModal(); // Fecha o modal após o upload
-  } catch (error) {
-    console.error("Error uploading file:", error);
-    // Adicione um feedback para o usuário
+    await $fetch(profileImagePath.value, { method: 'POST', body: formData })
+    store.reloadImageProfile = true
+    toggleModal()
+  } catch (e) {
+    console.error('Error uploading file:', e)
   } finally {
-    resetFileInput();
+    resetFileInput()
   }
 }
 </script>
 
 <template>
   <div>
-    <a role="button" :aria-label="t('changeAvatarAria')" class="avatar-trigger" @click="toggleModal">
-      <profile-image :id="store.chatActive.chatId" :cache-url="true" />
-      <icon-pencil-square class="position-relative" style="right: 1rem; top: 1rem" />
-    </a>
+    <!-- Trigger: profile image with pencil overlay -->
+    <button
+      class="relative group rounded-full focus:outline-none"
+      :aria-label="t('changeAvatarAria')"
+      @click="toggleModal"
+    >
+      <profile-image :id="store.chatActive.chatId" :cache-url="true" class="w-16 h-16" />
+      <div class="absolute inset-0 rounded-full bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+        <icon-pencil-square class="w-5 h-5 text-white" />
+      </div>
+    </button>
 
-    <div class="modal d-flex avatar-modal" :class="modalClass" v-if="showMedia">
-      <div class="modal-dialog">
-        <div class="modal-content avatar-content">
-          <div class="modal-header">
-            <h5 class="modal-title">{{ t('updateAvatarTitle') }}</h5>
-            <button type="button" class="btn-close" :aria-label="t('close')" @click="toggleModal"></button>
+    <!-- Modal -->
+    <teleport to="body">
+      <div
+        v-if="showModal"
+        class="fixed inset-0 z-[1050] flex items-center justify-center bg-black/70 backdrop-blur-sm"
+        @click.self="toggleModal"
+      >
+        <div class="bg-wa-header rounded-2xl shadow-2xl w-full max-w-sm mx-4 border border-wa-border overflow-hidden">
+          <!-- Header -->
+          <div class="flex items-center justify-between px-5 py-4 border-b border-wa-border">
+            <h2 class="text-wa-text font-semibold text-base">{{ t('updateAvatarTitle') }}</h2>
+            <button class="p-1.5 rounded-full text-wa-icon hover:bg-wa-hover" @click="toggleModal">
+              <svg viewBox="0 0 24 24" class="w-5 h-5" fill="currentColor">
+                <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
+              </svg>
+            </button>
           </div>
-          <div class="modal-body">
-            <div class="preview-wrap">
-              <profile-image
+
+          <!-- Body -->
+          <div class="px-5 py-4 flex flex-col gap-4">
+            <!-- Preview -->
+            <div class="flex justify-center">
+              <div class="w-24 h-24 rounded-full overflow-hidden border-2 border-wa-border">
+                <profile-image
                   :id="store.chatActive.chatId"
                   :cache-url="false"
                   :url-provided="imageUrl"
-              />
+                  class="w-full h-full"
+                />
+              </div>
             </div>
-            <input
-                class="form-control form-control-sm mt-3"
-                @change="onFilePicked"
+
+            <!-- File input -->
+            <div>
+              <input
+                class="block w-full text-sm text-wa-text-muted
+                       file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0
+                       file:text-sm file:font-medium file:bg-wa-hover file:text-wa-text
+                       hover:file:bg-wa-hover/80 cursor-pointer"
+                type="file"
                 accept=".jpg"
                 ref="imageImportRef"
-                type="file"
                 :aria-label="t('selectProfileImageAria')"
-            />
-            <small class="text-muted helper">{{ t('jpgOnlyHint') }}</small>
+                @change="onFilePicked"
+              />
+              <p class="text-wa-text-muted text-xs mt-1.5">{{ t('jpgOnlyHint') }}</p>
+            </div>
           </div>
-          <div class="modal-footer">
-            <button type="button" class="btn btn-outline-secondary" data-dismiss="modal" @click="toggleModal">
-              {{ t('cancel') }}
-            </button>
-            <button type="button" class="btn btn-primary" @click="uploadFile" :disabled="!fileValid">
+
+          <!-- Footer -->
+          <div class="flex gap-3 px-5 pb-5">
+            <button class="wa-btn-ghost flex-1 text-sm" @click="toggleModal">{{ t('cancel') }}</button>
+            <button class="wa-btn flex-1 text-sm" :disabled="!fileValid" @click="uploadFile">
               {{ t('saveChanges') }}
             </button>
           </div>
         </div>
       </div>
-    </div>
+    </teleport>
   </div>
 </template>
-
-<style scoped>
-.avatar-trigger {
-  position: relative;
-  display: inline-flex;
-  border-radius: var(--radius-pill);
-  padding: 0.2rem;
-  transition: background-color 0.2s ease, transform 0.2s ease;
-}
-
-.avatar-trigger:hover {
-  background: rgba(148, 163, 184, 0.16);
-  transform: translateY(-1px);
-}
-
-.avatar-modal {
-  background:
-    radial-gradient(circle at 20% 20%, rgba(255, 255, 255, 0.12), transparent 45%),
-    rgba(2, 6, 23, 0.7);
-  backdrop-filter: blur(2px);
-  position: fixed;
-  inset: 0;
-  align-items: center;
-  justify-content: center;
-  z-index: 1050;
-}
-
-.modal-dialog {
-  max-width: 460px;
-  width: calc(100% - 2rem);
-}
-
-.avatar-content {
-  background: var(--color-surface);
-  border-radius: var(--radius-lg);
-  border: 1px solid var(--color-border);
-  box-shadow: var(--shadow-md);
-  overflow: hidden;
-}
-
-.modal-header {
-  border-bottom: 1px solid var(--color-border-soft);
-  background: linear-gradient(180deg, rgba(248, 249, 251, 0.9), rgba(248, 249, 251, 0.6));
-  padding: 1.1rem 1.2rem 0.85rem;
-}
-
-.btn-close:focus-visible {
-  outline: 2px solid var(--focus-ring);
-  outline-offset: 2px;
-  border-radius: var(--radius-pill);
-}
-
-.modal-title {
-  font-weight: 600;
-  letter-spacing: -0.01em;
-}
-
-.modal-body {
-  padding: 1rem 1.2rem 0.6rem;
-  display: flex;
-  flex-direction: column;
-  gap: 0.6rem;
-}
-
-.preview-wrap {
-  width: 120px;
-  height: 120px;
-  border-radius: 999px;
-  overflow: hidden;
-  border: 2px solid var(--color-border-strong);
-  align-self: center;
-  background: #fff;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.preview-wrap :deep(img) {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-.helper {
-  color: var(--color-text-muted-dark);
-}
-
-.modal-footer {
-  border-top: 1px solid var(--color-border-soft);
-  padding: 0.8rem 1.2rem 1.1rem;
-  display: flex;
-  justify-content: flex-end;
-  gap: 0.5rem;
-}
-
-.modal-footer .btn {
-  border-radius: var(--radius-pill);
-}
-</style>

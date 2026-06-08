@@ -1,130 +1,69 @@
 <script setup lang="ts">
-import { useMainStore } from "~/store";
-import { useUiText } from "~/composables/useUiText";
+import { useMainStore } from '~/store'
+import { useUiText } from '~/composables/useUiText'
 
-const store = useMainStore();
-
-const { t } = useUiText();
+const store = useMainStore()
+const { t } = useUiText()
 
 const galleryOptions = computed(() => [
-  { type: "ALL", label: t('filterAll') },
-  { type: "VIDEO", label: t('filterVideo') },
-  { type: "IMAGE", label: t('filterImage') },
-  { type: "PDF", label: t('filterDocuments') },
-  { type: "AUDIO", label: t('filterAudio') },
-]);
+  { type: 'ALL', label: t('filterAll') },
+  { type: 'VIDEO', label: t('filterVideo') },
+  { type: 'IMAGE', label: t('filterImage') },
+  { type: 'PDF', label: t('filterDocuments') },
+  { type: 'AUDIO', label: t('filterAudio') },
+])
 
-const galleryFileType = ref("ALL");
+const galleryFileType = ref('ALL')
 
 const attachments = computed(() =>
-    galleryFileType.value === "ALL"
-        ? store.attachments
-        : store.attachments.filter((item) => item.type === galleryFileType.value)
-);
+  galleryFileType.value === 'ALL'
+    ? store.attachments
+    : store.attachments.filter((item) => item.type === galleryFileType.value)
+)
 
 function setGalleryFilter(type: string) {
-  galleryFileType.value = type;
+  galleryFileType.value = type
 }
 </script>
 
 <template>
-  <div class="gallery-panel">
-    <slot></slot>
-    <div class="gallery-header">
-    <div class="title">{{ t('galleryTitle') }}</div>
-      <ul class="nav filter-tabs justify-content-end">
-      <li
+  <div class="text-wa-text">
+    <slot />
+
+    <!-- Header -->
+    <div class="flex items-center justify-between gap-3 mb-3 px-4 pt-3">
+      <span class="font-semibold text-[15px]">{{ t('galleryTitle') }}</span>
+      <div class="flex flex-wrap gap-1.5">
+        <button
           v-for="item in galleryOptions"
           :key="item.type"
-          class="nav-item"
-      >
-        <button
-            class="nav-link active"
-            :class="{ active: galleryFileType === item.type }"
-            @click="setGalleryFilter(item.type)"
+          class="px-3 py-1 rounded-full text-[13px] border transition-colors"
+          :class="
+            galleryFileType === item.type
+              ? 'bg-wa-green/20 border-wa-green/50 text-wa-green font-semibold'
+              : 'border-wa-border text-wa-text-muted hover:bg-wa-hover'
+          "
+          @click="setGalleryFilter(item.type)"
         >
           {{ item.label }}
         </button>
-      </li>
-      </ul>
+      </div>
     </div>
 
-    <div class="row gallery-grid">
+    <!-- Grid -->
+    <div class="grid grid-cols-2 sm:grid-cols-3 gap-2 px-3 pb-4">
       <div
-          class="col-md-4"
-          v-for="item in attachments"
-          :key="item.url"
-          v-memo="galleryFileType"
+        v-for="item in attachments"
+        :key="item.url"
+        v-memo="[galleryFileType]"
+        class="rounded-xl border border-wa-border bg-wa-search overflow-hidden"
       >
-        <div class="card gallery-card">
-          <focusable-attachment
-              :attachment="item"
-              :class="{ 'blur-sensitive': store.blurEnabled }"
-          />
-        </div>
+        <focusable-attachment
+          :attachment="item"
+          :class="{ 'blur-sensitive': store.blurEnabled }"
+          class="blur-parent"
+        />
       </div>
     </div>
   </div>
 </template>
-
-<style scoped>
-.gallery-panel {
-  color: var(--color-text);
-}
-
-.gallery-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.75rem;
-  margin-bottom: 0.75rem;
-}
-
-.title {
-  font-size: 1.1rem;
-  font-weight: 600;
-  letter-spacing: -0.01em;
-}
-
-.filter-tabs {
-  gap: 0.4rem;
-  flex-wrap: wrap;
-}
-
-.filter-tabs .nav-link {
-  border-radius: var(--radius-pill);
-  border: 1px solid var(--color-border-strong);
-  color: var(--color-text);
-  padding: 0.25rem 0.7rem;
-  background: rgba(15, 23, 42, 0.2);
-  font-size: 0.85rem;
-}
-
-.filter-tabs .nav-link.active {
-  background: rgba(59, 130, 246, 0.2);
-  border-color: var(--color-accent-strong);
-  font-weight: 600;
-}
-
-.gallery-grid {
-  margin-top: 0.5rem;
-  row-gap: 0.75rem;
-}
-
-.gallery-card {
-  border-radius: var(--radius-md);
-  border: 1px solid var(--color-border);
-  background: rgba(15, 23, 42, 0.3);
-  box-shadow: var(--shadow-sm);
-}
-
-.blur-sensitive {
-  filter: blur(6px);
-  transition: filter 0.3s ease-in-out;
-}
-
-.gallery-card:hover .blur-sensitive,
-.gallery-card:focus-within .blur-sensitive {
-  filter: none;
-}
-</style>

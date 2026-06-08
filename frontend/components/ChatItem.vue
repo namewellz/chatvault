@@ -1,66 +1,56 @@
 <template>
-  <div class="chat-item d-flex flex-row p-2 w-100" @click="emitThisChatActive()">
-    <profile-image :id="item.chatId" :class="{ 'blur-sensitive': store.blurEnabled }" />
-    <div
-        class="w-50 chat-preview"
+  <div
+    class="flex items-center px-4 py-2 border-b border-wa-border cursor-pointer min-h-[73px] transition-colors blur-parent"
+    :class="isActive ? 'bg-wa-hover' : 'hover:bg-wa-hover/60'"
+    @click="emitThisChatActive"
+  >
+    <!-- Avatar -->
+    <div class="flex-shrink-0 mr-3">
+      <profile-image
+        :id="item.chatId"
         :class="{ 'blur-sensitive': store.blurEnabled }"
-    >
-      <div class="name">{{ item.chatName }}</div>
-      <div class="small text-truncate">
-        <i class="far fa-check-circle mr-1"></i>
+        class="w-12 h-12 rounded-full object-cover"
+      />
+    </div>
+
+    <!-- Content -->
+    <div class="flex-1 min-w-0">
+      <!-- Name row -->
+      <div class="flex items-center justify-between gap-2">
+        <span
+          class="text-wa-text font-semibold text-[15px] truncate"
+          :class="{ 'blur-sensitive': store.blurEnabled }"
+        >
+          {{ item.chatName }}
+        </span>
+        <message-created-at
+          :date="item.msgCreatedAt"
+          class="text-wa-text-muted text-[12px] flex-shrink-0"
+          :class="{ 'blur-sensitive': store.blurEnabled }"
+        />
+      </div>
+
+      <!-- Preview row -->
+      <div
+        class="text-wa-text-muted text-[13px] truncate mt-0.5"
+        :class="{ 'blur-sensitive': store.blurEnabled }"
+      >
         {{ item.content }}
       </div>
     </div>
-    <message-created-at :date="item.msgCreatedAt" />
   </div>
 </template>
 
 <script setup lang="ts">
-import { useMainStore } from "~/store";
+import { useMainStore } from '~/store'
 
-const store = useMainStore();
-const props = defineProps(["item"]);
-const emit = defineEmits(["update:chat-active"]);
+const store = useMainStore()
+const props = defineProps(['item'])
+const emit = defineEmits(['update:chat-active'])
+
+const isActive = computed(() => store.chatActive?.chatId === props.item?.chatId)
 
 function emitThisChatActive() {
-  emit("update:chat-active", props.item);
+  emit('update:chat-active', props.item)
 }
 </script>
-
-<style>
-.chat-item {
-  cursor: pointer;
-  background: rgba(2, 6, 23, 0.95);
-  border-bottom: 1px solid var(--color-border);
-  transition: background-color 0.2s ease, transform 0.2s ease;
-  align-items: center;
-}
-
-.chat-item:hover {
-  background: var(--color-accent-soft);
-  transform: translateY(-1px);
-}
-
-.chat-preview {
-  padding-left: 0.6rem;
-}
-
-.name {
-  color: var(--color-text);
-  font-weight: 600;
-  letter-spacing: -0.01em;
-}
-
-.chat-item .small {
-  color: var(--color-text-muted);
-}
-
-.blur-sensitive {
-  filter: blur(6px);
-  transition: filter 0.3s ease-in-out;
-}
-
-.chat-item:hover .blur-sensitive {
-  filter: none;
-}
-</style>

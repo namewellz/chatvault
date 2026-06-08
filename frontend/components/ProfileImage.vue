@@ -1,51 +1,50 @@
 <template>
-  <img :src="cachedUrl" :alt="t('profilePhotoAlt')" class="img-fluid rounded-circle"
-       style="height:50px; width: 50px" id="pic">
+  <img
+    :src="currentSrc"
+    :alt="t('profilePhotoAlt')"
+    class="rounded-full object-cover flex-shrink-0"
+    style="width:49px;height:49px;"
+    @error="onError"
+  />
 </template>
 
 <script setup lang="ts">
-import {useMainStore} from "~/store";
-import { useUiText } from "~/composables/useUiText";
+import { useMainStore } from '~/store'
+import { useUiText } from '~/composables/useUiText'
 
 const store = useMainStore()
 const { t } = useUiText()
 const props = defineProps(['id', 'urlProvided', 'cacheUrl'])
 const key = ref(0)
+const errored = ref(false)
 
-const url = computed(() => {
-  if (props.urlProvided) {
-    return props.urlProvided
-  } else if (props.id) {
-    return useRuntimeConfig().public.api.getProfileImage.replace(":chatId", props.id.toString())
-  } else {
-    return '/default-avatar.png'
-  }
+// Generic person SVG as data URI (no external service needed)
+const FALLBACK_SVG = `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 49 49'%3E%3Ccircle cx='24.5' cy='24.5' r='24.5' fill='%23202C33'/%3E%3Ccircle cx='24.5' cy='18' r='9.5' fill='%238696A0'/%3E%3Cellipse cx='24.5' cy='44' rx='17' ry='13' fill='%238696A0'/%3E%3C/svg%3E`
+
+const apiUrl = computed(() => {
+  if (props.urlProvided) return props.urlProvided
+  if (props.id) return useRuntimeConfig().public.api.getProfileImage.replace(':chatId', props.id.toString())
+  return null
 })
 
-const cachedUrl = computed(() => {
-  const cacheUrl = props.cacheUrl !== undefined ? props.cacheUrl.value : true
-  if (cacheUrl) {
-    return url.value + `?cache=${key.value}`
-  }
-  return url.value
-
+const currentSrc = computed(() => {
+  if (errored.value || !apiUrl.value) return FALLBACK_SVG
+  const useCache = props.cacheUrl !== undefined ? props.cacheUrl.value : true
+  return useCache ? apiUrl.value + `?cache=${key.value}` : apiUrl.value
 })
 
-function forceUpdate() {
-  key.value += 1
+function onError() {
+  errored.value = true
 }
 
-watch(
-    () => store.reloadImageProfile,
-    (reloadChatActive) => {
-      if (reloadChatActive) {
-        forceUpdate()
-      }
-    }
-)
+watch(() => store.reloadImageProfile, (reload) => {
+  if (reload) {
+    errored.value = false
+    key.value += 1
+  }
+})
 
+watch(() => props.id, () => {
+  errored.value = false
+})
 </script>
-
-<style scoped>
-
-</style>

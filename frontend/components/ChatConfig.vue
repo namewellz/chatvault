@@ -1,236 +1,154 @@
 <script setup lang="ts">
-import {useMainStore} from "~/store";
-import {computed, reactive, watch} from "vue";
-import { LOCALE_DISPLAY_NAMES, SUPPORTED_LOCALES } from "~/types/localization";
-import { useDateFormatting } from "~/composables/useDateFormatting";
-import { useUiText } from "~/composables/useUiText";
+import { useMainStore } from '~/store'
+import { computed, reactive, watch } from 'vue'
+import { LOCALE_DISPLAY_NAMES, SUPPORTED_LOCALES } from '~/types/localization'
+import { useDateFormatting } from '~/composables/useDateFormatting'
+import { useUiText } from '~/composables/useUiText'
 
-const emit = defineEmits(["refresh:page"]);
+const emit = defineEmits(['refresh:page'])
 
-const store = useMainStore();
-const { systemLocale } = useDateFormatting();
-const { t } = useUiText();
+const store = useMainStore()
+const { systemLocale } = useDateFormatting()
+const { t } = useUiText()
 
 const chatConfig = reactive({
   chatName: store.chatActive.chatName,
   editChatName: false,
   invalidPageSize: false,
   showGallery: false,
-});
+})
 
-const invalidPageSizeClass = computed(() => ({"d-block": chatConfig.invalidPageSize}));
-
-watch(
-    () => store.chatActive.chatId,
-    () => {
-      chatConfig.chatName = store.chatActive.chatName;
-    }
-);
+watch(() => store.chatActive.chatId, () => {
+  chatConfig.chatName = store.chatActive.chatName
+})
 
 const toggleChatConfig = () => (store.chatConfigOpen = !store.chatConfigOpen)
-
-const toggleGallery = () => {
-  chatConfig.showGallery = !chatConfig.showGallery;
-};
+const toggleGallery = () => { chatConfig.showGallery = !chatConfig.showGallery }
 
 const toggleChatName = async () => {
-  chatConfig.editChatName = !chatConfig.editChatName;
+  chatConfig.editChatName = !chatConfig.editChatName
   if (!chatConfig.editChatName && chatConfig.chatName !== store.chatActive.chatName) {
-    await updateChatName();
+    await updateChatName()
   }
-};
+}
 
 const updateChatName = async () => {
   const path = useRuntimeConfig()
-      .public.api.updateChatNameByChatId.replace(":chatId", store.chatActive.chatId.toString())
-      .replace(":chatName", chatConfig.chatName);
-  await $fetch(path, {method: "PATCH"});
-  store.chatActive.chatName = chatConfig.chatName;
-};
+    .public.api.updateChatNameByChatId
+    .replace(':chatId', store.chatActive.chatId.toString())
+    .replace(':chatName', chatConfig.chatName)
+  await $fetch(path, { method: 'PATCH' })
+  store.chatActive.chatName = chatConfig.chatName
+}
 
 const validatedPageSize = (event: Event) => {
-  event.preventDefault();
-  const input = event.target as HTMLInputElement;
-  const pageSizeNumber = Number(input.value);
-  const updated = store.updatePageSize(pageSizeNumber);
-  chatConfig.invalidPageSize = !updated;
-};
+  event.preventDefault()
+  const input = event.target as HTMLInputElement
+  const updated = store.updatePageSize(Number(input.value))
+  chatConfig.invalidPageSize = !updated
+}
 </script>
 
 <template>
-  <div class="col-12 col-md-3 h-100 overflow-auto config-panel">
+  <div
+    class="flex flex-col bg-wa-panel border-l border-wa-border wa-scroll overflow-y-auto flex-shrink-0"
+    :class="['w-full sm:w-[380px]']"
+  >
+    <!-- Gallery view -->
     <gallery v-if="chatConfig.showGallery">
-      <a href="#" class="h2" @click="toggleGallery">
-        <rotable-arrow-icon/>
-      </a>
+      <button
+        class="m-3 p-2 rounded-full text-wa-icon hover:bg-wa-hover transition-colors self-start"
+        @click="toggleGallery"
+      >
+        <svg viewBox="0 0 24 24" class="w-5 h-5" fill="currentColor">
+          <path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/>
+        </svg>
+      </button>
     </gallery>
+
     <template v-else>
-      <a href="#" class="h2 m-2 back-button" @click="toggleChatConfig">
-        <rotable-arrow-icon/>
-      </a>
-      <div class="d-flex justify-content-between align-items-center header-actions">
-        <profile-image-uploader/>
-        <chat-deleter @refresh:page="() => emit('refresh:page')"/>
-      </div>
-
-      <div class="mt-3 config-section">
-        <div class="section-title">{{ t('chatSettingsTitle') }}</div>
-        <label class="form-label">{{ t('chatNameLabel') }}</label>
-        <div class="input-group name-input">
-          <span class="input-group-text" @click="toggleChatName">
-            <icon-check v-if="chatConfig.editChatName"/>
-            <icon-pencil-square v-else/>
-          </span>
-          <input
-              type="text"
-              :disabled="!chatConfig.editChatName"
-              id="chatname-input"
-              class="form-control"
-              v-model="chatConfig.chatName"
-          />
-        </div>
-      </div>
-
-      <div class="form-group config-section">
-        <label for="active-author">{{ t('activeAuthorLabel') }}</label>
-        <select class="form-control" v-model="store.authorActive" id="active-author">
-          <option v-for="option in store.authors" :key="option" :value="option">
-            {{ option }}
-          </option>
-        </select>
-      </div>
-
-      <div class="form-group config-section">
-        <label for="page-size">{{ t('pageSizeLabel') }}</label>
-        <input
-            class="form-control"
-            type="number"
-            max="2000"
-            min="1"
-            placeholder="20"
-            id="page-size"
-            @input="validatedPageSize"
-        />
-        <div class="invalid-feedback" :class="invalidPageSizeClass">
-          {{ t('pageSizeInvalid') }}
-        </div>
-      </div>
-
-      <div class="form-group config-section">
-        <label for="locale-select">{{ t('dateFormatLocaleLabel') }}</label>
-        <select class="form-control" v-model="store.userLocale" id="locale-select">
-          <option v-for="locale in SUPPORTED_LOCALES" :key="locale" :value="locale">
-            {{ LOCALE_DISPLAY_NAMES[locale] }}
-            <span v-if="locale === 'auto'"> ({{ systemLocale }})</span>
-          </option>
-        </select>
-        <small class="form-text text-muted d-block mt-2">
-          {{ t('dateFormatLocaleHelp') }}
-        </small>
-      </div>
-
-      <div class="d-flex btn-group config-actions">
-        <import-export-chat/>
+      <!-- Header -->
+      <div class="flex items-center gap-3 px-4 py-3 bg-wa-header min-h-[59px] border-b border-wa-border">
         <button
-            class="btn btn-outline-primary btn-sm mt-3"
-            @click="toggleGallery"
+          class="p-1.5 rounded-full text-wa-icon hover:bg-wa-hover transition-colors"
+          @click="toggleChatConfig"
         >
-          {{ t('openMediaGallery') }}
-          <rotable-arrow-icon degree="180"/>
+          <svg viewBox="0 0 24 24" class="w-5 h-5" fill="currentColor">
+            <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
+          </svg>
+        </button>
+        <span class="text-wa-text font-semibold text-[15px]">{{ t('chatSettingsTitle') }}</span>
+      </div>
+
+      <!-- Profile image + delete -->
+      <div class="flex items-center justify-between px-4 py-4 border-b border-wa-border">
+        <profile-image-uploader />
+        <chat-deleter @refresh:page="() => emit('refresh:page')" />
+      </div>
+
+      <!-- Chat name -->
+      <div class="mx-3 mt-3 bg-wa-header/50 rounded-xl p-3 border border-wa-border">
+        <p class="text-wa-text-muted text-[11px] uppercase tracking-wider mb-2">{{ t('chatNameLabel') }}</p>
+        <div class="flex items-center gap-2">
+          <input
+            type="text"
+            :disabled="!chatConfig.editChatName"
+            class="wa-input flex-1 text-sm"
+            v-model="chatConfig.chatName"
+          />
+          <button
+            class="p-2 rounded-full text-wa-icon hover:bg-wa-hover transition-colors flex-shrink-0"
+            @click="toggleChatName"
+          >
+            <icon-check v-if="chatConfig.editChatName" />
+            <icon-pencil-square v-else />
+          </button>
+        </div>
+      </div>
+
+      <!-- Active author -->
+      <div class="mx-3 mt-3 bg-wa-header/50 rounded-xl p-3 border border-wa-border">
+        <label class="text-wa-text-muted text-[11px] uppercase tracking-wider block mb-2">
+          {{ t('activeAuthorLabel') }}
+        </label>
+        <select class="wa-input text-sm" v-model="store.authorActive">
+          <option v-for="option in store.authors" :key="option" :value="option">{{ option }}</option>
+        </select>
+      </div>
+
+      <!-- Page size -->
+      <div class="mx-3 mt-3 bg-wa-header/50 rounded-xl p-3 border border-wa-border">
+        <label class="text-wa-text-muted text-[11px] uppercase tracking-wider block mb-2">
+          {{ t('pageSizeLabel') }}
+        </label>
+        <input
+          class="wa-input text-sm"
+          type="number" max="2000" min="1" placeholder="20"
+          @input="validatedPageSize"
+        />
+        <p v-if="chatConfig.invalidPageSize" class="text-red-400 text-xs mt-1">{{ t('pageSizeInvalid') }}</p>
+      </div>
+
+      <!-- Locale -->
+      <div class="mx-3 mt-3 bg-wa-header/50 rounded-xl p-3 border border-wa-border">
+        <label class="text-wa-text-muted text-[11px] uppercase tracking-wider block mb-2">
+          {{ t('dateFormatLocaleLabel') }}
+        </label>
+        <select class="wa-input text-sm" v-model="store.userLocale">
+          <option v-for="locale in SUPPORTED_LOCALES" :key="locale" :value="locale">
+            {{ LOCALE_DISPLAY_NAMES[locale] }}<span v-if="locale === 'auto'"> ({{ systemLocale }})</span>
+          </option>
+        </select>
+        <p class="text-wa-text-muted text-xs mt-1.5">{{ t('dateFormatLocaleHelp') }}</p>
+      </div>
+
+      <!-- Actions -->
+      <div class="mx-3 mt-3 mb-6 flex flex-col gap-2">
+        <import-export-chat />
+        <button class="wa-btn-ghost text-sm py-2.5" @click="toggleGallery">
+          {{ t('openMediaGallery') }} →
         </button>
       </div>
     </template>
   </div>
 </template>
-
-<style scoped>
-.config-panel {
-  background: linear-gradient(180deg, rgba(2, 6, 23, 0.98), rgba(15, 23, 42, 0.98));
-  border-left: 1px solid var(--color-border);
-  color: var(--color-text);
-  padding: 0.75rem 0.9rem 1.25rem;
-}
-
-.back-button {
-  color: var(--color-text);
-  text-decoration: none;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: var(--radius-pill);
-  padding: 0.2rem 0.35rem;
-  transition: background-color 0.2s ease, transform 0.2s ease;
-}
-
-.back-button:hover {
-  background: rgba(148, 163, 184, 0.16);
-  transform: translateY(-1px);
-}
-
-.header-actions {
-  padding: 0.4rem 0.25rem 0.1rem;
-}
-
-.config-section {
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid rgba(148, 163, 184, 0.15);
-  border-radius: 12px;
-  padding: 0.85rem;
-  margin-top: 0.75rem;
-}
-
-.section-title {
-  font-size: 0.8rem;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  color: var(--color-text-muted);
-  margin-bottom: 0.6rem;
-}
-
-.config-panel .form-label,
-.config-panel label {
-  color: var(--color-text);
-  font-weight: 500;
-  margin-bottom: 0.4rem;
-}
-
-.config-panel .form-control,
-.config-panel .input-group-text {
-  background: rgba(255, 255, 255, 0.08);
-  border-color: var(--color-border-strong);
-  color: var(--color-text);
-  border-radius: 10px;
-}
-
-.config-panel .form-control::placeholder {
-  color: var(--color-text-subtle);
-}
-
-.config-panel .form-control:focus {
-  border-color: var(--color-accent-strong);
-  box-shadow: 0 0 0 0.2rem rgba(59, 130, 246, 0.2);
-}
-
-.name-input .input-group-text {
-  cursor: pointer;
-  border-radius: 10px 0 0 10px;
-}
-
-.config-panel .form-text {
-  color: var(--color-text-muted);
-}
-
-.config-panel .invalid-feedback {
-  color: #fca5a5;
-}
-
-.config-actions {
-  margin-top: 0.75rem;
-  gap: 0.5rem;
-  flex-wrap: wrap;
-}
-
-.config-actions .btn {
-  border-radius: var(--radius-pill);
-}
-</style>

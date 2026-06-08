@@ -1,0 +1,267 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  /* Legacy CSS variables kept for calendar and date-picker components */
+  :root {
+    --color-bg: #0B141A;
+    --color-bg-alt: #111B21;
+    --color-bg-elevated: #202C33;
+    --color-surface: #f8f9fb;
+    --color-surface-muted: #f3f4f6;
+    --color-text: #E9EDEF;
+    --color-text-muted: #8696A0;
+    --color-text-subtle: rgba(134, 150, 160, 0.7);
+    --color-text-dark: #111827;
+    --color-text-muted-dark: #6b7280;
+    --color-border: #222D34;
+    --color-border-strong: rgba(134, 150, 160, 0.35);
+    --color-border-soft: rgba(15, 23, 42, 0.08);
+    --color-accent: #00A884;
+    --color-accent-soft: rgba(0, 168, 132, 0.12);
+    --color-accent-strong: rgba(0, 168, 132, 0.5);
+    --shadow-sm: 0 4px 12px rgba(0, 0, 0, 0.25);
+    --shadow-md: 0 8px 32px rgba(0, 0, 0, 0.3);
+    --shadow-lg: 0 16px 48px rgba(0, 0, 0, 0.5);
+    --radius-sm: 8px;
+    --radius-md: 10px;
+    --radius-lg: 14px;
+    --radius-pill: 999px;
+    --focus-ring: rgba(0, 168, 132, 0.7);
+  }
+
+  html,
+  body,
+  #__nuxt {
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+  }
+
+  * {
+    box-sizing: border-box;
+  }
+
+  a {
+    color: inherit;
+    text-decoration: none;
+  }
+}
+
+@layer components {
+  /* ── Sent message bubble (right side, teal tail top-right) ── */
+  .wa-bubble-sent {
+    position: relative;
+    background-color: #005C4B;
+    border-radius: 7.5px 0 7.5px 7.5px;
+  }
+
+  .wa-bubble-sent::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    right: -8px;
+    width: 0;
+    height: 0;
+    border-top: 8px solid #005C4B;
+    border-right: 8px solid transparent;
+  }
+
+  /* ── Received message bubble (left side, dark tail top-left) ── */
+  .wa-bubble-recv {
+    position: relative;
+    background-color: #202C33;
+    border-radius: 0 7.5px 7.5px 7.5px;
+  }
+
+  .wa-bubble-recv::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -8px;
+    width: 0;
+    height: 0;
+    border-top: 8px solid #202C33;
+    border-left: 8px solid transparent;
+  }
+
+  /* ── System message (centered pill) ── */
+  .wa-bubble-system {
+    background-color: #182229;
+    border-radius: 7.5px;
+    padding: 5px 12px;
+    color: #8696A0;
+    font-size: 12.5px;
+    text-align: center;
+    max-width: 80%;
+  }
+
+  /* ── Custom scrollbar ── */
+  .wa-scroll::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  .wa-scroll::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .wa-scroll::-webkit-scrollbar-thumb {
+    background: rgba(134, 150, 160, 0.25);
+    border-radius: 3px;
+  }
+
+  .wa-scroll::-webkit-scrollbar-thumb:hover {
+    background: rgba(134, 150, 160, 0.45);
+  }
+
+  /* ── Blur for sensitive content ── */
+  .blur-sensitive {
+    filter: blur(6px);
+    transition: filter 0.3s ease-in-out;
+    user-select: none;
+  }
+
+  /* Parent hover reveals blurred content */
+  .blur-parent:hover .blur-sensitive {
+    filter: none;
+  }
+
+  /* ── WhatsApp-style search input ── */
+  .wa-search-input {
+    background-color: #1B2229;
+    border: none;
+    border-radius: 8px;
+    color: #E9EDEF;
+    padding: 8px 14px 8px 36px;
+    font-size: 15px;
+    outline: none;
+    width: 100%;
+  }
+
+  .wa-search-input::placeholder {
+    color: #8696A0;
+  }
+
+  /* ── WA form input ── */
+  .wa-input {
+    background-color: #2A3942;
+    border: 1px solid #374151;
+    border-radius: 8px;
+    color: #E9EDEF;
+    padding: 8px 12px;
+    font-size: 14px;
+    outline: none;
+    width: 100%;
+    transition: border-color 0.2s;
+  }
+
+  .wa-input:focus {
+    border-color: #00A884;
+  }
+
+  .wa-input::placeholder {
+    color: #8696A0;
+  }
+
+  .wa-input:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+
+  /* ── WA button ── */
+  .wa-btn {
+    background-color: #00A884;
+    color: #111B21;
+    border: none;
+    border-radius: 8px;
+    padding: 8px 16px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.2s;
+  }
+
+  .wa-btn:hover:not(:disabled) {
+    background-color: #02b991;
+  }
+
+  .wa-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  .wa-btn-ghost {
+    background-color: transparent;
+    color: #8696A0;
+    border: 1px solid #374151;
+    border-radius: 8px;
+    padding: 8px 16px;
+    font-size: 14px;
+    cursor: pointer;
+    transition: background-color 0.2s, color 0.2s;
+  }
+
+  .wa-btn-ghost:hover {
+    background-color: #2A3942;
+    color: #E9EDEF;
+  }
+
+  /* ── Highlight animation for jumped-to messages ── */
+  .wa-message-highlight {
+    animation: waHighlight 3s ease-out forwards;
+  }
+
+  @keyframes waHighlight {
+    0% {
+      box-shadow: 0 0 0 3px rgba(0, 168, 132, 0.7);
+    }
+    100% {
+      box-shadow: none;
+    }
+  }
+
+  /* ── Date divider ── */
+  .wa-date-divider {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 8px 0;
+    pointer-events: none;
+  }
+
+  .wa-date-divider span {
+    background-color: #182229;
+    color: #8696A0;
+    font-size: 12.5px;
+    padding: 5px 12px;
+    border-radius: 7.5px;
+    user-select: none;
+  }
+
+  /* ── Loading spinner ── */
+  .wa-spinner {
+    width: 20px;
+    height: 20px;
+    border: 2px solid rgba(0, 168, 132, 0.3);
+    border-top-color: #00A884;
+    border-radius: 50%;
+    animation: waSpin 0.7s linear infinite;
+  }
+
+  @keyframes waSpin {
+    to { transform: rotate(360deg); }
+  }
+
+  /* ── Jump mode badge ── */
+  .wa-jump-badge {
+    background-color: rgba(0, 168, 132, 0.15);
+    border: 1px solid rgba(0, 168, 132, 0.4);
+    color: #00A884;
+    padding: 3px 10px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 600;
+  }
+}
