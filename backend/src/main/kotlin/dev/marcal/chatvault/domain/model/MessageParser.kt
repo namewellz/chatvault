@@ -49,7 +49,11 @@ class MessageParser(
 
     fun parseDate(text: String): LocalDateTime =
         customFormatter?.let {
-            LocalDateTime.parse(text.removeBracketsAndTrim(), it)
+            try {
+                LocalDateTime.parse(text.removeBracketsAndTrim(), it)
+            } catch (_: java.time.format.DateTimeParseException) {
+                tryToInfer(text)
+            }
         } ?: tryToInfer(text)
 
     /**
@@ -108,7 +112,7 @@ class MessageParser(
             val name = result.groupValues[3].trim()
             val content = result.groupValues[4].trim()
             ParsedMessageInfo(date, name, content.removeLtrPrefix())
-        } ?: DATE_WITHOUT_NAME_REGEX.find(text)?.let { result ->
+        } ?: DATE_WITHOUT_NAME_REGEX.find(firstLine)?.let { result ->
             val date = parseDate(result.groupValues[1])
             val content = result.groupValues[3].trim()
             ParsedMessageInfo(date, null, content.removeLtrPrefix())
