@@ -19,6 +19,7 @@ COPY ./backend/settings.gradle.kts ./backend/settings.gradle.kts
 COPY ./backend/build.gradle.kts ./backend/build.gradle.kts
 
 WORKDIR /app/backend
+RUN sed -i 's/\r$//' gradlew && chmod +x gradlew
 RUN ./gradlew build -x test --no-daemon || return 0
 
 COPY ./backend/src ./src
