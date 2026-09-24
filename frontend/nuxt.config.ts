@@ -13,6 +13,8 @@ export default defineNuxtConfig({
               getMessagesByIdAndPage: `${host}/chats/:chatId?page=:page&size=:size&query=:query`,
               getAttachmentByChatIdAndMessageId: `${host}/chats/:chatId/messages/:messageId/attachment`,
               getAttachmentsInfoByChatId: `${host}/chats/:chatId/attachments`,
+              exportAttachmentsCsv: `${host}/chats/:chatId/attachments/export`,
+              importAttachmentsZip: `${host}/chats/:chatId/attachments/import`,
               importChatById: `${host}/chats/:chatId/messages/import`,
               updateChatNameByChatId: `${host}/chats/:chatId/chatName/:chatName`,
               getProfileImage: `${host}/chats/:chatId/profile-image`,

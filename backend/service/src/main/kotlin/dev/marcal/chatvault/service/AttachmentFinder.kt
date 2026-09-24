@@ -7,4 +7,6 @@ interface AttachmentFinder {
 
     fun execute(criteriaInput: AttachmentCriteriaInput): Resource
 
+    fun executeAsPlayable(criteriaInput: AttachmentCriteriaInput): Resource
+
 }

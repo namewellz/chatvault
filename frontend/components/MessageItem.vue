@@ -3,16 +3,23 @@
     <div class="message-bubble" :class="bubbleClasses">
       <div v-if="showAuthor" class="message-author" :style="{ color: authorColor }">{{ message.author }}</div>
       <div
+          v-if="!isAudio && !isVisualMedia"
           class="message-content"
           v-html="formattedContent"
           :class="{ 'blur-sensitive': store.blurEnabled }"
       ></div>
+      <voice-message
+          v-if="isAudio"
+          :attachment="message.attachment"
+          :outgoing="isAuthorSelf"
+          :class="{ 'blur-sensitive': store.blurEnabled }"
+      />
       <focusable-attachment
-          v-if="hasAttachment"
+          v-else-if="hasAttachment"
           :attachment="message.attachment"
           :class="{ 'blur-sensitive': store.blurEnabled }"
       />
-      <div class="message-meta">
+      <div v-if="!isAudio" class="message-meta" :class="{ 'message-meta--overlay': isVisualMedia }">
         <span class="message-time">{{ timeText }}</span>
       </div>
     </div>
@@ -52,6 +59,13 @@ function escapeHtml(text: string): string {
 
 const hasAttachment = computed(() => Boolean(props.message.attachment));
 
+const isAudio = computed(() => props.message.attachment?.type === 'AUDIO');
+
+const isVisualMedia = computed(() => {
+  const type = props.message.attachment?.type;
+  return type === 'IMAGE' || type === 'VIDEO';
+});
+
 const isSystemMessage = computed(() => props.message.authorType === 'SYSTEM');
 
 const isAuthorSelf = computed(() => props.message.author === store.authorActive);
@@ -68,6 +82,7 @@ const bubbleClasses = computed(() => ({
   'bubble-out': isAuthorSelf.value && !isSystemMessage.value,
   'bubble-in': !isAuthorSelf.value && !isSystemMessage.value,
   'bubble-system': isSystemMessage.value,
+  'bubble-media': isVisualMedia.value,
 }));
 
 const authorColor = computed(() => colorForAuthor(props.message.author));
@@ -108,6 +123,19 @@ function colorForAuthor(author: string): string {
   padding: 6px 8px 8px 10px;
   border-radius: 7.5px;
   box-shadow: 0 1px 0.5px rgba(11, 20, 26, 0.13);
+}
+
+.bubble-media {
+  padding: 3px;
+  background: transparent;
+}
+
+.bubble-media.bubble-out {
+  background: transparent;
+}
+
+.bubble-media.bubble-in {
+  background: transparent;
 }
 
 .bubble-out {
@@ -157,6 +185,20 @@ function colorForAuthor(author: string): string {
   display: flex;
   justify-content: flex-end;
   margin-top: 2px;
+}
+
+.message-meta--overlay {
+  position: absolute;
+  right: 8px;
+  bottom: 6px;
+  margin-top: 0;
+}
+
+.message-meta--overlay .message-time {
+  background: rgba(11, 20, 26, 0.55);
+  color: #e9edef;
+  padding: 2px 7px;
+  border-radius: 12px;
 }
 
 .message-time {

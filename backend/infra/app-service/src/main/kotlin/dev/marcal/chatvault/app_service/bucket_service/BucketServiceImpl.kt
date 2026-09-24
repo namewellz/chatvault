@@ -170,6 +170,50 @@ class BucketServiceImpl(
         }
     }
 
+    override fun exists(bucketFile: BucketFile): Boolean {
+        return bucketFile.file(bucketRootPath).exists()
+    }
+
+    override fun transcodeAudioToMp3(bucketFile: BucketFile): Resource {
+        val source = bucketFile.file(bucketRootPath)
+        if (!source.exists()) {
+            throw AttachmentNotFoundException("file not found ${source.name}")
+        }
+
+        val target = File(source.parentFile, source.nameWithoutExtension + ".mp3")
+        if (!target.exists() || target.length() == 0L) {
+            val exitCode = runFfmpeg(source, target)
+            if (exitCode != 0 || !target.exists()) {
+                throw BucketServiceException("ffmpeg failed to transcode ${source.name} (exit=$exitCode)", null)
+            }
+        }
+
+        return UrlResource(target.toURI()).takeIf { it.exists() }
+                ?: throw AttachmentNotFoundException("transcoded file not found ${target.name}")
+    }
+
+    private fun runFfmpeg(source: File, target: File): Int {
+        val process = ProcessBuilder(
+                "ffmpeg",
+                "-y",
+                "-hide_banner",
+                "-loglevel", "error",
+                "-i", source.absolutePath,
+                "-vn",
+                "-c:a", "libmp3lame",
+                "-b:a", "64k",
+                target.absolutePath
+        )
+                .redirectErrorStream(true)
+                .start()
+
+        process.inputStream.bufferedReader().use { reader ->
+            reader.readText().takeIf { it.isNotBlank() }?.let { logger.warn("ffmpeg: $it") }
+        }
+
+        return process.waitFor()
+    }
+
     private fun createBucketIfNotExists(path: String) {
         createBucketIfNotExists(File(path))
     }

@@ -46,7 +46,7 @@ export function AttachmentConstructor(attachmentName: string | undefined, url: s
         return {name: attachmentName, type: 'IMAGE', url: url}
     } else if (/\.(mp4|avi|mov)$/i.test(attachmentName)) {
         return {name: attachmentName, type: 'VIDEO', url: url}
-    } else if (/\.(mp3|wav|opus)$/i.test(attachmentName)) {
+    } else if (/\.(mp3|wav|opus|ogg|oga|m4a|aac|amr)$/i.test(attachmentName)) {
         return {name: attachmentName, type: 'AUDIO', url: url}
     } else if (/\.(pdf)$/i.test(attachmentName)) {
         return {name: attachmentName, type: 'PDF', url: url}

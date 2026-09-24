@@ -38,7 +38,8 @@ class MessageCreatorUseCase(
         )
 
         if (theMessagePayload.messages.isEmpty()) {
-            throw IllegalStateException("there are no messages to create, message list is empty $theMessagePayload")
+            logger.info("no new messages to save, all messages already imported for chatId=${chatBucketInfo.chatId}")
+            return
         }
 
         logger.info("try to save ${theMessagePayload.messages.size} messages, chatInfo=${chatBucketInfo}")

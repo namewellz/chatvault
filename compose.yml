@@ -1,12 +1,14 @@
 services:
   database:
-    image: 'postgres:latest'
+    image: 'postgres:16'
     environment:
       - 'POSTGRES_DB=chatvault'
       - 'POSTGRES_PASSWORD=secret'
       - 'POSTGRES_USER=usr_chatvault'
     ports:
       - '5432:5432'
+    volumes:
+      - db_data:/var/lib/postgresql/data
   adminer:
     image: adminer
     ports:
@@ -24,7 +26,11 @@ services:
     ports:
       - 8080:8080
     volumes:
-      - '/opt/chatvault:/opt/chatvault'
+      - chatvault_data:/opt/chatvault
       - './config:/config'
     depends_on:
       - database
+
+volumes:
+  db_data:
+  chatvault_data:

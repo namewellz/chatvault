@@ -1,30 +1,44 @@
 <script setup lang="ts">
+import { useMainStore } from "~/store";
+
 const props = defineProps(['attachment'])
 
-let showMedia = ref(false);
-const modalClass = computed(() => {
-  return {
-    'fade show d-block': !!showMedia.value
-  }
-})
+const store = useMainStore();
 
-function toggleModal() {
-  showMedia.value = !showMedia.value
+const isAudio = computed(() => props.attachment?.type === 'AUDIO')
+const isVisual = computed(() => props.attachment?.type === 'IMAGE' || props.attachment?.type === 'VIDEO')
+
+const mediaItems = computed(() =>
+    store.attachments.filter((item: any) => item.type === 'IMAGE' || item.type === 'VIDEO')
+)
+
+const showViewer = ref(false)
+const viewerIndex = ref(0)
+
+function openViewer() {
+  const idx = mediaItems.value.findIndex((item: any) => item.url === props.attachment.url)
+  viewerIndex.value = idx >= 0 ? idx : 0
+  showViewer.value = true
 }
 </script>
 
 <template>
 
-  <lazy-attachment :attachment="props.attachment" @click="toggleModal" role="button" >
-    <div class="modal d-flex" :class="modalClass" v-if="showMedia">
-      <div class="modal-content d-flex align-items-center m-auto">
-        <lazy-attachment :attachment="props.attachment"/>
-      </div>
-    </div>
-  </lazy-attachment>
+  <voice-message v-if="isAudio" :attachment="props.attachment" />
 
+  <lazy-attachment
+      v-else
+      :attachment="props.attachment"
+      :role="isVisual ? 'button' : undefined"
+      @click="isVisual && openViewer()"
+  />
 
-
+  <media-viewer
+      v-if="showViewer"
+      :items="mediaItems"
+      :initial-index="viewerIndex"
+      @close="showViewer = false"
+  />
 
 </template>
 

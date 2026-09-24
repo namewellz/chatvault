@@ -53,7 +53,7 @@ const validatedPageSize = (event: Event) => {
 </script>
 
 <template>
-  <div class="chat-config col-12 col-md-3 h-100 overflow-auto">
+  <div class="chat-config col-12 h-100 overflow-auto">
     <gallery v-if="chatConfig.showGallery">
       <a href="#" class="h2" @click="toggleGallery">
         <rotable-arrow-icon/>
@@ -120,6 +120,8 @@ const validatedPageSize = (event: Event) => {
           <rotable-arrow-icon degree="180"/>
         </button>
       </div>
+
+      <attachment-import-export/>
     </template>
   </div>
 </template>
@@ -134,5 +136,13 @@ const validatedPageSize = (event: Event) => {
 .chat-config .h2 {
   color: var(--wa-text-3);
   font-size: 1.4rem;
+}
+
+@media (min-width: 768px) {
+  .chat-config {
+    flex: 0 0 25%;
+    width: 25%;
+    max-width: 25%;
+  }
 }
 </style>

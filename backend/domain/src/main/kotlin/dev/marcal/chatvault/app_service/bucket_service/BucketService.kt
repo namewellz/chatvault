@@ -6,6 +6,8 @@ import org.springframework.core.io.Resource
 interface BucketService {
     fun save(bucketFile: BucketFile)
     fun loadFileAsResource(bucketFile: BucketFile): Resource
+    fun exists(bucketFile: BucketFile): Boolean
+    fun transcodeAudioToMp3(bucketFile: BucketFile): Resource
     fun zipPendingImports(chatName: String? = null): Sequence<Resource>
     fun deleteZipImported(filename: String)
     fun saveToImportDir(bucketFile: BucketFile)

@@ -1,6 +1,7 @@
 package dev.marcal.chatvault.web
 
 import dev.marcal.chatvault.in_out_boundary.input.AttachmentCriteriaInput
+import dev.marcal.chatvault.in_out_boundary.output.AttachmentImportOutput
 import dev.marcal.chatvault.in_out_boundary.output.AttachmentInfoOutput
 import dev.marcal.chatvault.in_out_boundary.output.ChatLastMessageOutput
 import dev.marcal.chatvault.in_out_boundary.output.MessageOutput
@@ -13,6 +14,7 @@ import org.springframework.data.web.SortDefault
 import org.springframework.http.*
 import org.springframework.web.bind.annotation.*
 import org.springframework.web.multipart.MultipartFile
+import java.nio.charset.StandardCharsets
 import java.util.concurrent.TimeUnit
 
 @RestController
@@ -24,7 +26,8 @@ class ChatController(
         private val chatNameUpdater: ChatNameUpdater,
         private val attachmentInfoFinderByChatId: AttachmentInfoFinderByChatId,
         private val profileImageManager: ProfileImageManager,
-        private val chatDeleter: ChatDeleter
+        private val chatDeleter: ChatDeleter,
+        private val attachmentZipImporter: AttachmentZipImporter
 ) {
 
     @GetMapping
@@ -68,20 +71,26 @@ class ChatController(
     @GetMapping("{chatId}/messages/{messageId}/attachment")
     fun downloadAttachment(
             @PathVariable("chatId") chatId: Long,
-            @PathVariable("messageId") messageId: Long
+            @PathVariable("messageId") messageId: Long,
+            @RequestParam("format", required = false) format: String? = null
     ): ResponseEntity<Resource> {
-        val resource = attachmentFinder.execute(
-                AttachmentCriteriaInput(
-                        chatId = chatId,
-                        messageId = messageId
-                )
+        val criteria = AttachmentCriteriaInput(
+                chatId = chatId,
+                messageId = messageId
         )
 
+        val resource = if (format == "mp3") {
+            attachmentFinder.executeAsPlayable(criteria)
+        } else {
+            attachmentFinder.execute(criteria)
+        }
+
         val cacheControl = CacheControl.maxAge(1, TimeUnit.DAYS)
+        val disposition = if (format == "mp3") "inline" else "attachment"
 
         return ResponseEntity.ok()
                 .contentType(resource.getMediaType())
-                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"${resource.filename}\"")
+                .header(HttpHeaders.CONTENT_DISPOSITION, "$disposition; filename=\"${resource.filename}\"")
                 .cacheControl(cacheControl)
                 .body(resource)
     }
@@ -95,6 +104,35 @@ class ChatController(
         return ResponseEntity.ok()
                 .cacheControl(cacheControl)
                 .body(attachmentInfoFinderByChatId.execute(chatId))
+    }
+
+    @GetMapping("{chatId}/attachments/export")
+    fun exportAttachmentsCsv(
+            @PathVariable("chatId") chatId: Long
+    ): ResponseEntity<String> {
+        val rows = attachmentInfoFinderByChatId.execute(chatId).toList()
+
+        val csv = buildString {
+            appendLine("name,type,messageId")
+            rows.forEach { row ->
+                appendLine("${escapeCsv(row.name)},${attachmentTypeOf(row.name)},${row.id}")
+            }
+        }
+
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"attachments-$chatId.csv\"")
+                .contentType(MediaType("text", "csv", StandardCharsets.UTF_8))
+                .body(csv)
+    }
+
+    @PostMapping("{chatId}/attachments/import")
+    fun importAttachments(
+            @PathVariable("chatId") chatId: Long,
+            @RequestParam("file") file: MultipartFile,
+            @RequestParam("overwrite", required = false, defaultValue = "false") overwrite: Boolean
+    ): ResponseEntity<AttachmentImportOutput> {
+        val result = attachmentZipImporter.execute(chatId, file.inputStream, overwrite)
+        return ResponseEntity.ok(result)
     }
 
     @PostMapping("{chatId}/profile-image")
@@ -125,6 +163,36 @@ class ChatController(
 }
 
 fun Resource.getMediaType(): MediaType {
-    return MediaTypeFactory.getMediaTypes(this.filename).firstOrNull()
+    val knownAudioTypes = mapOf(
+        "opus" to MediaType("audio", "ogg"),
+        "oga" to MediaType("audio", "ogg"),
+        "ogg" to MediaType("audio", "ogg")
+    )
+    val extension = this.filename?.substringAfterLast('.', "")?.lowercase()
+    return knownAudioTypes[extension]
+            ?: MediaTypeFactory.getMediaTypes(this.filename).firstOrNull()
             ?: MediaType.APPLICATION_OCTET_STREAM
+}
+
+private val IMAGE_EXTENSIONS = setOf("jpg", "jpeg", "png", "gif", "webp")
+private val VIDEO_EXTENSIONS = setOf("mp4", "avi", "mov")
+private val AUDIO_EXTENSIONS = setOf("mp3", "wav", "opus", "ogg", "oga", "m4a", "aac", "amr")
+
+fun attachmentTypeOf(name: String): String {
+    val extension = name.substringAfterLast('.', "").lowercase()
+    return when (extension) {
+        in IMAGE_EXTENSIONS -> "IMAGE"
+        in VIDEO_EXTENSIONS -> "VIDEO"
+        in AUDIO_EXTENSIONS -> "AUDIO"
+        "pdf" -> "PDF"
+        else -> "UNKNOWN"
+    }
+}
+
+fun escapeCsv(value: String): String {
+    return if (value.contains(',') || value.contains('"') || value.contains('\n') || value.contains('\r')) {
+        "\"" + value.replace("\"", "\"\"") + "\""
+    } else {
+        value
+    }
 }

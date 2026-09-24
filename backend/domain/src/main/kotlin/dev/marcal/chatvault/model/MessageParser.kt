@@ -120,7 +120,7 @@ class MessageParser(pattern: String? = null) {
         val firstLine = text.lineSequence().first()
         val textMessage = text.lineSequence().drop(1).joinToString("\n")
 
-        val (date, name, firstLineMessage) = extractDateNameFirstLineMessage(firstLine, text)
+        val (date, name, firstLineMessage) = extractDateNameFirstLineMessage(firstLine)
 
         val content = buildContent(firstLineMessage, textMessage)
         val attachment = extractAttachment(firstLineMessage)
@@ -134,14 +134,14 @@ class MessageParser(pattern: String? = null) {
     }
 
     private fun extractDateNameFirstLineMessage(
-        firstLine: String, text: String
+        firstLine: String
     ): ParsedMessageInfo {
         return DATE_WITH_NAME_REGEX.find(firstLine)?.let { result ->
             val date = parseDate(result.groupValues[1])
             val name = result.groupValues[3].trim()
             val content = result.groupValues[4].trim()
             ParsedMessageInfo(date, name, content.removeLtrPrefix())
-        } ?: DATE_WITHOUT_NAME_REGEX.find(text)?.let { result ->
+        } ?: DATE_WITHOUT_NAME_REGEX.find(firstLine)?.let { result ->
             val date = parseDate(result.groupValues[1])
             val content = result.groupValues[3].trim()
             ParsedMessageInfo(date, null, content.removeLtrPrefix())

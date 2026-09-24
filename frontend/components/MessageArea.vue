@@ -66,8 +66,6 @@ const hasNextPages = computed(() => {
 const dynamicClass = computed(() => {
   return {
     'd-none': props.mobile && (store.chatActive.chatId == null || store.chatConfigOpen),
-    'col-md-6': !props.mobile && store.chatConfigOpen,
-    'col-md-9': !props.mobile && !store.chatConfigOpen,
   }
 })
 
@@ -180,6 +178,15 @@ watch(content, async (newContent) => {
 <style scoped>
 .message-area {
   background: var(--wa-bg-5);
+}
+
+@media (min-width: 768px) {
+  .message-area {
+    flex: 1 1 0%;
+    width: auto;
+    max-width: none;
+    min-width: 0;
+  }
 }
 
 .message-list {

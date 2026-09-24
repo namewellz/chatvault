@@ -39,3 +39,9 @@ out/
 
 compose-prd.yml
 config/application.properties
+
+# Local backups
+backup/
+
+# Claude local settings
+.claude/

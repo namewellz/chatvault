@@ -1,6 +1,6 @@
 <template>
   <div id="chat-list-area"
-       class="sidebar col-12 col-md-3 h-100 p-0 d-flex flex-column"
+       class="sidebar col-12 h-100 p-0 d-flex flex-column"
        :class="dynamicClass">
     <div class="sidebar-header d-flex align-items-center justify-content-between">
       <span class="sidebar-title">Chats</span>
@@ -126,5 +126,13 @@ function exitThisChat() {
 
 .conversation-list {
   background: var(--wa-bg-1);
+}
+
+@media (min-width: 768px) {
+  .sidebar {
+    flex: 0 0 30%;
+    width: 30%;
+    max-width: 30%;
+  }
 }
 </style>

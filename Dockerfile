@@ -20,6 +20,8 @@ RUN sed -i 's/\r$//' gradlew && chmod +x gradlew && ./gradlew clean build
 
 FROM amazoncorretto:21-alpine
 
+RUN apk add --no-cache ffmpeg
+
 WORKDIR /app
 COPY --from=frontend_builder /app/.output/public /app/public
 COPY --from=backend_builder /app/backend/application/build/libs/application-1.16.0.jar chatvault.jar
