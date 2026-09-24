@@ -1,4 +1,5 @@
 dependencies {
     implementation project(":backend:domain")
     implementation project(":backend:in-out-boundary")
+    implementation project(":backend:service")
 }

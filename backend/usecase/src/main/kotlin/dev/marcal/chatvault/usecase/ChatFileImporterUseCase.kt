@@ -68,36 +68,43 @@ class ChatFileImporterUseCase(
 
         val zipInputStream = ZipInputStream(BufferedInputStream(inputStream))
 
+        logger.info("zip import started: chatId=$chatId")
+        var entryCount = 0
+        var mediaCount = 0
+
         var entry = zipInputStream.nextEntry
         while (entry != null) {
+            entryCount++
             val fileName = entry.name
-
-            val byteArray = bytes(zipInputStream)
-            bucketService.save(BucketFile(bytes = byteArray, fileName = fileName, address = bucket))
+            logger.info("[$entryCount] entry: $fileName")
 
             if (ChatNamePatternMatcher.matches(fileName)) {
-                execute(
-                    chatId = chatId,
-                    inputStream = ByteArrayInputStream(byteArray),
-                    fileType = FileTypeInputEnum.TEXT
-                )
+                // Chat text files are small — load into memory so we can save and parse in one pass
+                val byteArray = readBytes(zipInputStream)
+                logger.info("[$entryCount] parsing chat file: $fileName (${byteArray.size / 1024} KB)")
+                bucketService.save(BucketFile(bytes = byteArray, fileName = fileName, address = bucket))
+                execute(chatId = chatId, inputStream = ByteArrayInputStream(byteArray), fileType = FileTypeInputEnum.TEXT)
+            } else {
+                // Media files can be large — stream directly to disk without buffering in memory
+                mediaCount++
+                bucketService.save(BucketFile(stream = zipInputStream, fileName = fileName, address = bucket))
+                logger.info("[$entryCount] saved media: $fileName")
             }
 
             entry = zipInputStream.nextEntry
         }
         zipInputStream.close()
+        logger.info("zip import finished: chatId=$chatId entries=$entryCount media=$mediaCount")
     }
 
-    private fun bytes(zipInputStream: ZipInputStream): ByteArray {
-        val byteArrayOutputStream = ByteArrayOutputStream()
-        val buffer = ByteArray(1024)
+    private fun readBytes(zipInputStream: ZipInputStream): ByteArray {
+        val out = ByteArrayOutputStream()
+        val buffer = ByteArray(8192)
         var len: Int
-
         while (zipInputStream.read(buffer).also { len = it } > 0) {
-            byteArrayOutputStream.write(buffer, 0, len)
+            out.write(buffer, 0, len)
         }
-
-        return byteArrayOutputStream.toByteArray()
+        return out.toByteArray()
     }
 
     private fun createMessages(inputStream: InputStream, chatId: Long) {

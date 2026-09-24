@@ -5,11 +5,22 @@ import dev.marcal.chatvault.in_out_boundary.output.exceptions.MessageParserExcep
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.time.format.DateTimeFormatterBuilder
+import java.time.format.DateTimeParseException
+import java.util.Locale
 
 
 class MessageParser(pattern: String? = null) {
     private val customFormatter: DateTimeFormatter? =
         pattern?.let { DateTimeFormatter.ofPattern(it.removeBracketsAndTrim()) }
+
+    private val alternativeFormatters: List<DateTimeFormatter> by lazy {
+        val datePatterns = listOf("M/d/yy", "M/d/yyyy", "d/M/yy", "d/M/yyyy")
+        val timePatterns = listOf("HH:mm", "HH:mm:ss", "h:mm a", "h:mm:ss a")
+        datePatterns.flatMap { date ->
+            timePatterns.map { time -> buildAlternativeFormatter(date, time) }
+        }
+    }
+
     private val firstComesTheDayFormatter: DateTimeFormatter by lazy {
         buildWithPattern("[dd.MM.yyyy][dd.MM.yy]")
     }
@@ -30,7 +41,9 @@ class MessageParser(pattern: String? = null) {
         private val DATE_WITHOUT_NAME_REGEX = "$DATE_REGEX(?: - |: )(.*)$".toRegex()
         private val DATE_WITH_NAME_REGEX = "$DATE_REGEX(?: - |: |\\s+)([^:]+): (.+)$".toRegex()
         private val ONLY_DATE = DATE_REGEX.toRegex()
-        private val ATTACHMENT_NAME_REGEX = "^(.*?)\\s+\\((.*?)\\)$".toRegex()
+        private val ATTACHMENT_NAME_REGEX =
+            "^(.*?)\\s+\\((?:file attached|document attached|image attached|video attached|audio attached|sticker attached|arquivo anexado|documento anexado|foto anexada|imagem anexada|vídeo anexado|áudio anexado|figurinha anexada)\\)$"
+                .toRegex(RegexOption.IGNORE_CASE)
     }
 
     fun <R> parse(text: String, transform: (Message) -> R): R {
@@ -42,10 +55,37 @@ class MessageParser(pattern: String? = null) {
             .appendPattern("[,][.]").optionalEnd().appendPattern("[hh:mma][HH:mm]").toFormatter()
     }
 
+    private fun buildAlternativeFormatter(datePattern: String, timePattern: String): DateTimeFormatter {
+        return DateTimeFormatterBuilder()
+            .parseCaseInsensitive()
+            .appendPattern(datePattern)
+            .optionalStart().appendLiteral(",").optionalEnd()
+            .appendLiteral(" ")
+            .appendPattern(timePattern)
+            .toFormatter(Locale.ENGLISH)
+    }
+
     fun parseDate(text: String): LocalDateTime {
-        return customFormatter?.let {
-            LocalDateTime.parse(text.removeBracketsAndTrim(), it)
-        } ?: tryToInfer(text)
+        val cleanText = text.removeBracketsAndTrim()
+        val custom = customFormatter
+        return when {
+            custom != null -> parseWithCustomOrAlternative(cleanText, custom)
+            else -> tryToInfer(cleanText)
+        }
+    }
+
+    private fun parseWithCustomOrAlternative(text: String, custom: DateTimeFormatter): LocalDateTime {
+        return try {
+            LocalDateTime.parse(text, custom)
+        } catch (e: DateTimeParseException) {
+            alternativeFormatters.firstNotNullOfOrNull { formatter ->
+                try {
+                    LocalDateTime.parse(text, formatter)
+                } catch (e: DateTimeParseException) {
+                    null
+                }
+            } ?: tryToInfer(text)
+        }
     }
 
     /**

@@ -16,7 +16,7 @@ COPY --link gradle ./gradle
 COPY --link build.gradle gradlew gradlew.bat settings.gradle ./
 COPY --link backend ./backend
 
-RUN ./gradlew clean build
+RUN sed -i 's/\r$//' gradlew && chmod +x gradlew && ./gradlew clean build
 
 FROM amazoncorretto:21-alpine
 

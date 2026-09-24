@@ -17,7 +17,10 @@ services:
       - SPRING_DATASOURCE_URL=jdbc:postgresql://database:5432/chatvault
       - SPRING_DATASOURCE_USERNAME=usr_chatvault
       - SPRING_DATASOURCE_PASSWORD=secret
-      - CHATVAULT_MSGPARSER_DATEFORMAT=dd/MM/yyyy HH:mm
+      - CHATVAULT_MSGPARSER_DATEFORMAT=M/d/yy, HH:mm
+      - SPRING_SERVLET_MULTIPART_MAX_FILE_SIZE=-1
+      - SPRING_SERVLET_MULTIPART_MAX_REQUEST_SIZE=-1
+      - JAVA_TOOL_OPTIONS=-Xmx2g
     ports:
       - 8080:8080
     volumes:

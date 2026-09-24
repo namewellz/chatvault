@@ -6,6 +6,8 @@ const clickModal = ref(false)
 const chatImportRef = ref(null)
 const errorMessage = ref(undefined)
 const disableUpload = ref(true)
+const uploadProgress = ref<number | null>(null)
+
 const modalClass = computed(() => {
   return {
     'fade show d-block': !!clickModal.value
@@ -30,6 +32,12 @@ const chatName = computed(() => {
   }
 })
 
+const uploadStatusLabel = computed(() => {
+  if (uploadProgress.value === null) return null
+  if (uploadProgress.value < 100) return `Enviando... ${uploadProgress.value}%`
+  return 'Processando arquivo...'
+})
+
 function toggleModal() {
   clickModal.value = !clickModal.value
   errorMessage.value = undefined
@@ -45,27 +53,58 @@ async function onFilePicked() {
 }
 
 async function uploadFile() {
-  if (chatImportRef?.value?.files && chatImportRef?.value?.files[0]) {
-    store.loading = true
-    const form = new FormData()
-    form.append("file", chatImportRef.value.files[0]);
-    $fetch(importChatPath.value, {
-      method: "POST",
-      body: form
-    }).then(() => {
-      store.loading = false
-      chatImportRef.value = null
-      store.clearMessages()
-    }).catch(e => {
-      store.loading = false
-      errorMessage.value = e.data.detail
-    })
-  }
+  if (!chatImportRef?.value?.files || !chatImportRef?.value?.files[0]) return
+
+  store.loading = true
+  errorMessage.value = undefined
+  uploadProgress.value = 0
+  disableUpload.value = true
+
+  const form = new FormData()
+  form.append("file", chatImportRef.value.files[0])
+
+  await new Promise<void>((resolve, reject) => {
+    const xhr = new XMLHttpRequest()
+
+    xhr.upload.onprogress = (event) => {
+      if (event.lengthComputable) {
+        uploadProgress.value = Math.min(99, Math.round((event.loaded / event.total) * 100))
+      }
+    }
+
+    xhr.onload = () => {
+      if (xhr.status >= 200 && xhr.status < 300) {
+        uploadProgress.value = 100
+        resolve()
+      } else {
+        try {
+          reject({ data: JSON.parse(xhr.responseText) })
+        } catch {
+          reject({ message: `Erro HTTP ${xhr.status}` })
+        }
+      }
+    }
+
+    xhr.onerror = () => reject({ message: 'Falha de conexão' })
+    xhr.onabort = () => reject({ message: 'Upload cancelado' })
+
+    xhr.open('POST', importChatPath.value)
+    xhr.send(form)
+  }).then(() => {
+    store.clearMessages()
+    if (chatImportRef.value) chatImportRef.value.value = ''
+  }).catch(e => {
+    errorMessage.value = e.data?.detail ?? e.message ?? 'Falha no upload'
+  }).finally(() => {
+    store.loading = false
+    uploadProgress.value = null
+    disableUpload.value = true
+  })
 }
 
 watch(
     () => store.chatActive.chatId,
-    (chatId) => {
+    () => {
       disableUpload.value = true
       if (chatImportRef.value) {
         chatImportRef.value.value = ''
@@ -115,6 +154,28 @@ watch(
                        ref="chatImportRef"
                        type="file">
               </div>
+
+              <div v-if="uploadProgress !== null && !allowDownloadAll" class="mb-3">
+                <div v-if="uploadProgress < 100">
+                  <div class="d-flex justify-content-between mb-1">
+                    <small class="text-muted">{{ uploadStatusLabel }}</small>
+                  </div>
+                  <div class="progress" style="height: 8px;">
+                    <div class="progress-bar progress-bar-striped progress-bar-animated"
+                         role="progressbar"
+                         :style="{ width: uploadProgress + '%' }"
+                         :aria-valuenow="uploadProgress"
+                         aria-valuemin="0"
+                         aria-valuemax="100">
+                    </div>
+                  </div>
+                </div>
+                <div v-else class="d-flex align-items-center gap-2 text-muted">
+                  <div class="spinner-border spinner-border-sm" role="status"></div>
+                  <small>{{ uploadStatusLabel }}</small>
+                </div>
+              </div>
+
               <div class="btn-group" role="group" v-if="!allowDownloadAll">
                 <button type="button" :disabled="disableUpload" @click="uploadFile"
                         class="btn btn-outline-secondary ml-2">Upload

@@ -255,6 +255,18 @@ class MessageParserTest {
     }
 
     @Test
+    fun `should not treat message ending with parentheses as attachment`() {
+        val longMessage =
+            "As aulas são fixas nas terças e quintas mas a distribuição da modalidade do dia é conforme a grade. Vocês recebem nas primeiras aulas o calendário letivo, para se programarem. Pode ser que em uma semana você tenha aula presencial na terça e online ao-vivo na quinta ou vise e versa, ou algumas semanas a mesma modalidade, podendo ser 2 dias presenciais ou os 2 dias online ao-vivo. (Serão somente de terças e quintas)"
+        val line = "11/18/24, 14:20 - Wellington Alves: $longMessage"
+
+        val message = MessageParser().parse(line) { it }
+
+        assertEquals(null, message.content.attachment)
+        assertEquals(longMessage, message.content.text)
+    }
+
+    @Test
     fun `should mount message multi line with attachmentName`() {
         val line =
             """
@@ -422,6 +434,21 @@ class MessageParserTest {
             assertEquals(LocalDateTime.of(2023, 6, 1, 10, 44), this.parseDate(" 01*06*2023***10:44**AM "))
         }
 
+    }
+
+    @Test
+    fun `should accept alternative date format when a custom pattern is configured`() {
+        MessageParser("dd/MM/yyyy HH:mm").apply {
+            assertEquals(LocalDateTime.of(2021, 1, 22, 22, 0), this.parseDate("1/22/21, 22:00"))
+            assertEquals(LocalDateTime.of(2021, 1, 22, 22, 0, 15), this.parseDate("1/22/21, 22:00:15"))
+            assertEquals(LocalDateTime.of(2021, 1, 22, 22, 0), this.parseDate("1/22/21, 10:00 PM"))
+            assertEquals(LocalDateTime.of(2023, 11, 16, 18, 44), this.parseDate("16/11/2023 18:44"))
+        }
+
+        MessageParser("M/d/yy, HH:mm").apply {
+            assertEquals(LocalDateTime.of(2023, 11, 16, 18, 44), this.parseDate("16/11/2023 18:44"))
+            assertEquals(LocalDateTime.of(2024, 2, 22, 12, 6), this.parseDate("2/22/24, 12:06"))
+        }
     }
 
     @Test
