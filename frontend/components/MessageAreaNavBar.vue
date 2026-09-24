@@ -1,26 +1,24 @@
 <template>
   <div id="navbar"
-       class="sticky-top d-flex p-2 m-0 justify-content-between"
+       class="sticky-top d-flex align-items-center px-3 m-0"
        v-if="chatActive">
-    <div :class="{ 'blur-sensitive': store.blurEnabled }" class="chat-info-header d-flex align-items-center">
-      <a href="#" class="h2" @click="exitThisChat">
+    <div :class="{ 'blur-sensitive': store.blurEnabled }" class="chat-info-header d-flex align-items-center flex-grow-1">
+      <a href="#" class="back-link" @click="exitThisChat">
         <rotable-arrow-icon/>
       </a>
-      <a href="#" class="m-2" @click="() => toggleOpenChatConfig()">
+      <a href="#" class="avatar-link" @click="() => toggleOpenChatConfig()">
         <profile-image :id="store.chatActive.chatId"/>
       </a>
-      <div class="d-flex flex-column" role="button" @click="() => toggleOpenChatConfig()">
-        <div class="font-weight-bold" id="name">{{ store.chatActive.chatName }}
-        </div>
-        <span class="badge align-content-end bg-success">{{ store.chatActive.msgCount }} messages</span>
-        <div class="small d-flex" id="details">last message sent:
-          <message-created-at :date="store.chatActive.msgCreatedAt"/>
-        </div>
+      <div class="d-flex flex-column chat-info-text" role="button" @click="() => toggleOpenChatConfig()">
+        <div class="chat-name" id="name">{{ store.chatActive.chatName }}</div>
+        <div class="chat-detail" id="details">{{ store.chatActive.msgCount }} messages</div>
       </div>
 
     </div>
     <search-bar :chatId="store.chatActive.chatId" @search="handleSearch" />
-    <icon-three-dots class="self" role="button" @click="() => toggleOpenChatConfig()"/>
+    <button type="button" class="wa-icon-btn" role="button" @click="() => toggleOpenChatConfig()">
+      <icon-three-dots class="self"/>
+    </button>
 
   </div>
 </template>
@@ -48,7 +46,69 @@ function handleSearch({ query, chatId }: { query: string; chatId: string | null 
 
 <style scoped>
 #navbar {
-  background: #000000;
+  background: var(--wa-bg-2);
+  border-bottom: 1px solid var(--wa-border-1);
+  height: 59px;
+  gap: 12px;
+}
+
+.back-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  color: var(--wa-text-3);
+  margin-left: -8px;
+  transition: background 0.15s ease;
+}
+
+.back-link:hover {
+  background: var(--wa-hover);
+  color: var(--wa-text-1);
+}
+
+.avatar-link {
+  margin: 0 10px 0 4px;
+  line-height: 0;
+}
+
+.chat-info-text {
+  min-width: 0;
+}
+
+.chat-name {
+  color: var(--wa-text-1);
+  font-size: 16px;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.chat-detail {
+  color: var(--wa-text-2);
+  font-size: 12.5px;
+}
+
+.wa-icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border: none;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--wa-text-3);
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.wa-icon-btn:hover {
+  background: var(--wa-hover);
+  color: var(--wa-text-1);
 }
 
 .blur-sensitive {
@@ -58,14 +118,5 @@ function handleSearch({ query, chatId }: { query: string; chatId: string | null 
 
 #navbar:hover .blur-sensitive {
   filter: none;
-}
-
-.navbar {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 0.5rem;
-  background: #000;
-  color: #fff;
 }
 </style>

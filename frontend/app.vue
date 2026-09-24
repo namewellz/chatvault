@@ -9,6 +9,6 @@ import Index from "~/pages/index.vue";
 
 <style>
 body {
-  background: #000000;
+  background: #0b141a;
 }
 </style>

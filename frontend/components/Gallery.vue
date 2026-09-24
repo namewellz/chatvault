@@ -60,7 +60,15 @@ function setGalleryFilter(type: string) {
 </template>
 
 <style scoped>
+.title {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--wa-text-1);
+  margin: 8px 0 12px;
+}
+
 .nav-link.active {
   font-weight: bold;
+  color: var(--wa-green-1);
 }
 </style>

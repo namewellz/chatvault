@@ -1,7 +1,5 @@
 <template>
-  <div class="flex-grow-1 text-end">
-    <div class="small" :class="classObject">{{ dateObject.date }}</div>
-  </div>
+  <span class="message-created-at" :class="classObject">{{ dateObject.date }}</span>
 </template>
 
 <script setup lang="ts">
@@ -38,5 +36,13 @@ const classObject = computed(() => {
 </script>
 
 <style scoped>
+.message-created-at {
+  font-size: 12px;
+  color: var(--wa-text-2);
+  white-space: nowrap;
+}
 
+.font-weight-bold {
+  font-weight: 600;
+}
 </style>

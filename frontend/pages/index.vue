@@ -1,41 +1,35 @@
 <template>
   <div class="index-page" ref="indexRef">
 
-    <main class="container-fluid">
-      <div class="d-flex justify-content-center" v-if="store.loading">
-        <strong>Loading...</strong>
-        <div class="spinner-border ml-auto" role="status" aria-hidden="true"></div>
-      </div>
-      <div class="row h-100 m-3 m-md-4">
-        <new-chat-uploader v-if="createChatAction"
-                           @update:chats="refreshPage"
-                           @exit:dialog="() => createChatAction = false"
-        >
+    <div class="loading-overlay" v-if="store.loading">
+      <div class="spinner-border" role="status" aria-hidden="true"></div>
+    </div>
 
-        </new-chat-uploader>
+    <main class="container-fluid app-shell">
+      <new-chat-uploader v-if="createChatAction"
+                         @update:chats="refreshPage"
+                         @exit:dialog="() => createChatAction = false"
+      />
 
-        <chat-exporter v-else-if="exportChatAction"
-                       allow-download-all="true"
-                       @exit:dialog="() => exportChatAction = false"/>
+      <chat-exporter v-else-if="exportChatAction"
+                     allow-download-all="true"
+                     @exit:dialog="() => exportChatAction = false"/>
 
-        <template v-else>
-          <chat-list :chats="chats"
-                     :mobile="isMobile"
-                     @create:chat="createNewChat"
-                     @update:chat-active="updateChatActive"
-                     @export:chat="exportChat"
-                     @update:disk-import="refreshPage"
-          />
-          <message-area
-              :mobile="isMobile"
-          />
-          <chat-config v-if="store.chatConfigOpen"
-                       @refresh:page="() => refresh()"
-          />
-        </template>
-        <p class="app-version">ChatVault - v{{ appVersion }} </p>
-
-      </div>
+      <template v-else>
+        <chat-list :chats="chats"
+                   :mobile="isMobile"
+                   @create:chat="createNewChat"
+                   @update:chat-active="updateChatActive"
+                   @export:chat="exportChat"
+                   @update:disk-import="refreshPage"
+        />
+        <message-area
+            :mobile="isMobile"
+        />
+        <chat-config v-if="store.chatConfigOpen"
+                     @refresh:page="() => refresh()"
+        />
+      </template>
     </main>
 
   </div>
@@ -112,23 +106,37 @@ onMounted(() => {
 
 <style>
 .index-page {
-  font-size: 18px;
-  color: #ffff;
-
-}
-
-main {
+  font-size: 15px;
+  color: var(--wa-text-1);
   width: 100vw;
-  height: 90vh;
+  height: 100vh;
+  overflow: hidden;
 }
 
-.app-version {
-  font-size: 14px;
-  color: #aaa;
-  margin-top: 24px;
-  margin-bottom: 0;
-  margin-right: 8px;
-  letter-spacing: 1px;
+.app-shell {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  width: 100%;
+  height: 100%;
+  padding: 0;
+  margin: 0;
 }
 
+.loading-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 2000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(11, 20, 26, 0.6);
+  backdrop-filter: blur(2px);
+}
+
+.loading-overlay .spinner-border {
+  color: var(--wa-green-1);
+  width: 3rem;
+  height: 3rem;
+}
 </style>

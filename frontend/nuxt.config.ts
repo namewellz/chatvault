@@ -25,7 +25,7 @@ export default defineNuxtConfig({
       }
   },
 
-  css: ["bootstrap/dist/css/bootstrap.min.css"],
+  css: ["bootstrap/dist/css/bootstrap.min.css", "~/assets/css/whatsapp.css"],
 
   modules: [
       '@pinia/nuxt',
